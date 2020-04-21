@@ -10,7 +10,7 @@ using namespace std;
 
 int AFD = 0, ingresadas = 0, validas = 0, invalidas = 0, traducidas = 0;
 const int longitudMaxima = 15, inicio = 80 - 47, cadenaMax = 256;
-char palabra[cadenaMax], palabraTraducida[cadenaMax];
+string palabra[cadenaMax], palabraTraducida[cadenaMax];
 
 // lista encadenada para alfabetos
 struct simboloEntrada
@@ -35,15 +35,15 @@ simboloSalida *ultimaPosicionPalabraSalida = NULL;
 simboloSalida *nuevaPalabraSalida = NULL;
 
 //lista encadenada para conjuntos
-struct estado
+struct conjuntoEstados
 {
-    char palabra[longitudMaxima];
-    struct estado *siguienteEstado;
+    string palabra;
+    struct conjuntoEstados *siguienteEstado;
 };
-typedef struct estado *conjuntoTraduccion;
-conjuntoTraduccion estadosPosiblesQ = NULL;
-conjuntoTraduccion estadosAceptacion = NULL;
-conjuntoTraduccion estadoInicialQ0 = NULL;
+conjuntoEstados *pointerEstadosPosibles = NULL;
+conjuntoEstados *inicioPosicionEstados = NULL;
+conjuntoEstados *ultimaPosicionEstados = NULL;
+conjuntoEstados *nuevoEstado = NULL;
 
 // Lista encadenada para los nodos del grafo
 struct nodoGrafo
@@ -67,11 +67,13 @@ typedef struct arista *Tarista;
 
 void Ayuda(),
     Traduccion(),
+    AlfabetoSalida(),
+    ConjuntoEstados(),
+    EstadoInicial(),
+    mostrar(),
     Validacion(),
     Estadisticas(),
-    Validar(),
-    alfabetoSalida(),
-    mostrar();
+    Validar();
 
 int main()
 {
@@ -186,14 +188,14 @@ void Traduccion()
             cin >> opcion;
             if (opcion == 'n')
             {
-                alfabetoSalida();
+                AlfabetoSalida();
             }
         } while (opcion == 's');
         break;
     }
 }
 
-void alfabetoSalida()
+void AlfabetoSalida()
 {
     string letraSalida;
     char opcion;
@@ -242,11 +244,70 @@ void alfabetoSalida()
             cin >> opcion;
             if (opcion == 'n')
             {
+                ConjuntoEstados();
+            }
+        } while (opcion == 's');
+        break;
+    }
+}
+
+void ConjuntoEstados()
+{
+    string estados;
+    char opcion;
+    bool aceptado = true;
+
+    while (true)
+    {
+        do
+        {
+            do
+            {
+                aceptado = true;
+                cout << endl << "Indique el conjunto de estados: ";
+                cin >> estados;
+
+                for (string::size_type i = 0; i < estados.size(); ++i)
+                {
+                    if (!isdigit(estados[i]) && !isalpha(estados[i]))
+                    {
+                        aceptado = false;
+                        cout << "El caracter: " << (estados[i]) << " en la palabra, " << estados << " no puede ser aceptado, ya que no es alfanumerico, intenta de nuevo." << endl
+                             << endl;
+                    }
+                }
+
+            } while (aceptado == false);
+
+            nuevoEstado = new (conjuntoEstados);
+            nuevoEstado->palabra = estados;
+            nuevoEstado->siguienteEstado = NULL;
+            if (inicioPosicionEstados == NULL)
+            {
+                inicioPosicionEstados = nuevoEstado;
+                if (ultimaPosicionEstados == NULL)
+                    ultimaPosicionEstados = nuevoEstado;
+            }
+            else
+            {
+                ultimaPosicionEstados->siguienteEstado = nuevoEstado;
+                ultimaPosicionEstados = nuevoEstado;
+            }
+
+            cout << endl << "Desea ingresar un nuevo simbolo? (s/n): ";
+            cin >> opcion;
+            if (opcion == 'n')
+            {
                 mostrar();
             }
         } while (opcion == 's');
         break;
     }
+}
+
+void EstadoInicial()
+{
+
 }
 
 void mostrar()
@@ -287,6 +348,26 @@ void mostrar()
         else
         {
             pointerPalabraSalida = pointerPalabraSalida->siguiente;
+            cout << ", ";
+        }
+    }
+
+    cout << endl
+         << "Q: ";
+    pointerEstadosPosibles = inicioPosicionEstados;
+    cout << "{ ";
+
+    while (true)
+    {
+        cout << pointerEstadosPosibles->palabra;
+        if (pointerEstadosPosibles->siguienteEstado == NULL)
+        {
+            cout << " }";
+            break;
+        }
+        else
+        {
+            pointerEstadosPosibles = pointerEstadosPosibles->siguienteEstado;
             cout << ", ";
         }
     }
